@@ -1,10 +1,32 @@
+import ssl
 from app import app
 from chatterbot import ChatBot
-from chatterbot.trainers import ChatterBotCorpusTrainer
+from chatterbot.trainers import ChatterBotCorpusTrainer, UbuntuCorpusTrainer
 
 bot = None
-language_setting = "english"
-support_languages = {"english", "chinese"}
+language_setting = "chinese"
+support_languages = {"english", "chinese", "ubuntu"}
+
+
+def disable_ssl():
+    try:
+        _create_unverified_https_context = ssl._create_unverified_context
+    except AttributeError:
+        pass
+    else:
+        ssl._create_default_https_context = _create_unverified_https_context
+
+
+def train_bot():
+    global bot
+    global language_setting
+
+    if language_setting == "ubuntu":
+        trainer = UbuntuCorpusTrainer(bot)
+        trainer.train()
+    else:
+        trainer = ChatterBotCorpusTrainer(bot)
+        trainer.train("chatterbot.corpus.{}".format(language_setting))
 
 
 def set_bot(language):
@@ -15,8 +37,9 @@ def set_bot(language):
     if language != language_setting:
         language_setting = language
 
-        trainer = ChatterBotCorpusTrainer(bot)
-        trainer.train("chatterbot.corpus.{}".format(language_setting))
+        disable_ssl()
+
+        train_bot()
 
     app.logger.info("Bot set to {}".format(language_setting))
 
@@ -36,8 +59,9 @@ def get_bot():
             ],
         )
 
-        trainer = ChatterBotCorpusTrainer(bot)
-        trainer.train("chatterbot.corpus.{}".format(language_setting))
+        disable_ssl()
+
+        train_bot()
 
         app.logger.info("Bot is ready")
 

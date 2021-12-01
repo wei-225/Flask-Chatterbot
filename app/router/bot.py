@@ -1,12 +1,15 @@
 from app import app
 from app.chatter import chat
-from flask import request
+from flask import request, jsonify
 
 
 @app.route("/set_language", methods=["POST", "GET"])
 def set_language():
     language = request.values.get("language")
     chat.set_bot(language)
+
+    resp = jsonify(success=True)
+    return resp
 
 
 @app.route("/response", methods=["POST", "GET"])
